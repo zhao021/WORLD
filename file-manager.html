@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>何处所想 - 文件管理器</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #3498db;
+      --secondary-color: #2ecc71;
+      --danger-color: #e74c3c;
+      --dark-color: #2c3e50;
+      --light-color: #ecf0f1;
+      --border-radius: 8px;
+      --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+      --transition: all 0.3s ease;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      line-height: 1.6;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .header {
+      background-color: var(--dark-color);
+      color: white;
+      padding: 1.5rem 0;
+      text-align: center;
+      box-shadow: var(--box-shadow);
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-weight: 500;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      margin-bottom: 2rem;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+    }
+    
+    .card-header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .card-header h2 {
+      margin: 0;
+      font-size: 1.3rem;
+      font-weight: 500;
+    }
+    
+    .card-body {
+      padding: 1.5rem;
+    }
+    
+    .card-description {
+      margin-bottom: 1.2rem;
+      color: #666;
+    }
+    
+    .btn {
+      display: inline-block;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: var(--transition);
+      margin-right: 0.8rem;
+      margin-bottom: 0.8rem;
+    }
+    
+    .btn:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+    
+    .btn-primary {
+      background-color: var(--primary-color);
+    }
+    
+    .btn-success {
+      background-color: var(--secondary-color);
+    }
+    
+    .btn-danger {
+      background-color: var(--danger-color);
+    }
+    
+    .file-input-container {
+      margin: 1.2rem 0;
+      position: relative;
+    }
+    
+    .file-input-label {
+      display: inline-block;
+      background-color: #f1f1f1;
+      color: #555;
+      padding: 0.7rem 1.2rem;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      border: 2px dashed #ccc;
+      transition: var(--transition);
+      text-align: center;
+      width: 100%;
+    }
+    
+    .file-input-label:hover {
+      border-color: var(--primary-color);
+      background-color: #f8f8f8;
+    }
+    
+    .file-input {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    
+    .file-name {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    
+    .info-box {
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: var(--border-radius);
+      position: relative;
+      padding-left: 1.5rem;
+      background-color: #f8f9fa;
+      border-left: 4px solid #ddd;
+      transition: var(--transition);
+    }
+    
+    .info-success {
+      background-color: rgba(46, 204, 113, 0.1);
+      border-left-color: var(--secondary-color);
+    }
+    
+    .info-warning {
+      background-color: rgba(231, 76, 60, 0.1);
+      border-left-color: var(--danger-color);
+    }
+    
+    .info-neutral {
+      background-color: rgba(52, 152, 219, 0.1);
+      border-left-color: var(--primary-color);
+    }
+    
+    .data-preview {
+      background-color: #f8f9fa;
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      overflow: auto;
+      max-height: 300px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      border: 1px solid #eee;
+      margin-top: 1rem;
+    }
+    
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 1rem;
+    }
+    
+    .footer {
+      text-align: center;
+      padding: 1.5rem 0;
+      margin-top: 2rem;
+      color: #666;
+      font-size: 0.9rem;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 0 1rem;
+      }
+      
+      .card-header h2 {
+        font-size: 1.1rem;
+      }
+      
+      .btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>何处所想 - 文件管理器</h1>
+  </div>
+  
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <h2>当前数据</h2>
+      </div>
+      <div class="card-body">
+        <p class="card-description">这里显示您当前的情绪地图数据，您可以查看、清空或重新加载数据。</p>
+        
+        <div class="action-row">
+          <button id="loadCurrentData" class="btn btn-primary">刷新数据</button>
+          <button id="clearData" class="btn btn-danger">清空数据</button>
+        </div>
+        
+        <div id="currentDataInfo" class="info-box info-neutral">未加载数据</div>
+        <div id="currentData" class="data-preview"></div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <h2>导入数据</h2>
+      </div>
+      <div class="card-body">
+        <p class="card-description">从本地JSON文件导入数据，将覆盖当前数据。</p>
+        
+        <div class="file-input-container">
+          <label class="file-input-label">
+            <span>选择JSON文件</span>
+            <input type="file" id="fileInput" class="file-input" accept=".json">
+          </label>
+          <div id="fileName" class="file-name"></div>
+        </div>
+        
+        <div class="action-row">
+          <button id="importData" class="btn btn-primary">导入数据</button>
+        </div>
+        
+        <div id="importInfo" class="info-box info-neutral">选择一个JSON文件导入</div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <h2>导出数据</h2>
+      </div>
+      <div class="card-body">
+        <p class="card-description">将当前数据导出到本地文件，保存在output目录下，文件名格式为：emotion_map_YYYYMMDD_HHMMSS.json</p>
+        
+        <div class="action-row">
+          <button id="exportData" class="btn btn-success">导出数据</button>
+        </div>
+        
+        <div id="exportInfo" class="info-box info-neutral">点击按钮导出数据</div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <h2>返回地图</h2>
+      </div>
+      <div class="card-body">
+        <p class="card-description">返回到情绪地图页面继续记录您的情绪和想法。</p>
+        
+        <div class="action-row">
+          <a href="index.html" class="btn btn-primary">返回地图</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="footer">
+    <p>何处所想 © 2025 - 情绪地图</p>
+  </div>
+  
+  <!-- 引入FileSaver.js库 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  
+  <script>
+    // 数据配置
+    const DB_CONFIG = {
+      currentFile: 'output/current/markers_data.json', // 当前数据文件
+      backupsDir: 'output/backups/', // 手动备份目录
+      historyDir: 'output/history/', // 历史记录目录
+      version: 1
+    };
+    
+    let currentData = [];
+    
+    // 从文件加载数据
+    function loadDataFromFile(filePath) {
+      return new Promise((resolve, reject) => {
+        fetch(filePath, {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        })
+          .then(response => {
+            if (!response.ok) {
+              if (response.status === 404) {
+                console.log('数据文件不存在，将创建新文件');
+                return []; // 文件不存在时返回空数组
+              }
+              throw new Error('无法加载数据文件');
+            }
+            return response.text().then(text => {
+              // 检查文本是否为空或只包含空白字符
+              if (!text || text.trim() === '') {
+                return [];
+              }
+              // 尝试解析JSON
+              try {
+                return JSON.parse(text);
+              } catch (e) {
+                console.error('JSON解析错误:', e, '原始文本:', text);
+                return [];
+              }
+            });
+          })
+          .then(data => {
+            console.log(`已从文件加载 ${data.length} 条记录`);
+            resolve(data);
+          })
+          .catch(error => {
+            console.error('加载数据失败', error);
+            resolve([]); // 出错时返回空数组
+          });
+      });
+    }
+    
+    // 保存数据到当前文件
+    function saveDataToCurrentFile(data) {
+      return saveFileUsingPHP(data, DB_CONFIG.currentFile);
+    }
+    
+    // 保存数据到历史记录
+    function saveDataToHistory(data) {
+      // 使用当前时间作为文件名，精确到秒
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const timestamp = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+      
+      const filename = `${DB_CONFIG.historyDir}emotion_map_${timestamp}.json`;
+      return saveFileUsingPHP(data, filename);
+    }
+    
+    // 导出数据到备份目录
+    function exportDataToBackup(data) {
+      // 使用当前时间作为文件名，精确到秒
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const timestamp = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+      
+      const filename = `${DB_CONFIG.backupsDir}emotion_map_${timestamp}.json`;
+      return saveFileUsingPHP(data, filename);
+    }
+    
+    // 使用PHP保存文件
+    function saveFileUsingPHP(data, filename) {
+      return new Promise((resolve, reject) => {
+        const formData = new FormData();
+        const jsonData = JSON.stringify(data, null, 2);
+        
+        formData.append('data', jsonData);
+        formData.append('filename', filename);
+        
+        fetch('save-file.php', {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: formData
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('保存文件失败，服务器返回错误');
+          }
+          return response.json();
+        })
+        .then(result => {
+          if (result.success) {
+            console.log(`文件已保存到: ${result.filepath}`);
+            resolve(result);
+          } else {
+            console.error('保存文件失败:', result.message);
+            // 如果PHP保存失败，回退到本地存储
+            return saveToLocalStorage(data, filename).then(resolve).catch(reject);
+          }
+        })
+        .catch(error => {
+          console.error('保存文件失败:', error);
+          // 如果PHP请求失败，回退到本地存储
+          saveToLocalStorage(data, filename).then(resolve).catch(reject);
+        });
+      });
+    }
+    
+    // 保存到本地存储（作为备用方案）
+    function saveToLocalStorage(data, filename) {
+      return new Promise((resolve, reject) => {
+        try {
+          // 保存数据到localStorage
+          const key = 'emotion_map_data';
+          localStorage.setItem(key, JSON.stringify(data));
+          console.log('数据已保存到本地存储（备用方案）');
+          
+          // 同时尝试下载文件
+          downloadFile(data, filename).catch(err => {
+            console.warn('下载文件失败，但数据已保存到本地存储', err);
+          });
+          
+          resolve({
+            success: true,
+            message: '数据已保存到本地存储（备用方案）',
+            filepath: 'localStorage'
+          });
+        } catch (error) {
+          console.error('保存到本地存储失败', error);
+          
+          // 如果本地存储也失败，尝试下载文件
+          downloadFile(data, filename)
+            .then(() => {
+              resolve({
+                success: true,
+                message: '数据已下载到本地文件（备用方案）',
+                filepath: filename
+              });
+            })
+            .catch(err => {
+              reject(err);
+            });
+        }
+      });
+    }
+    
+    // 通用下载文件函数（浏览器下载，作为备用方案）
+    function downloadFile(data, filename) {
+      return new Promise((resolve, reject) => {
+        try {
+          const dataStr = JSON.stringify(data, null, 2);
+          const blob = new Blob([dataStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const downloadLink = document.createElement('a');
+          downloadLink.href = url;
+          downloadLink.download = filename;
+          downloadLink.style.display = 'none';
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          setTimeout(() => URL.revokeObjectURL(url), 100);
+          resolve();
+        } catch (error) {
+          console.error('文件下载失败', error);
+          reject(error);
+        }
+      });
+    }
+    
+    // 加载当前数据
+    document.getElementById('loadCurrentData').addEventListener('click', () => {
+      loadDataFromFile(DB_CONFIG.currentFile)
+        .then(data => {
+          if (data && data.length > 0) {
+            currentData = data;
+            document.getElementById('currentData').textContent = JSON.stringify(currentData, null, 2);
+            document.getElementById('currentDataInfo').textContent = `已加载 ${currentData.length} 条记录`;
+            document.getElementById('currentDataInfo').className = 'info-box info-success';
+          } else {
+            // 如果文件中没有数据，尝试从localStorage加载
+            try {
+              const storedData = localStorage.getItem('emotion_map_data');
+              if (storedData) {
+                currentData = JSON.parse(storedData) || [];
+                document.getElementById('currentData').textContent = JSON.stringify(currentData, null, 2);
+                document.getElementById('currentDataInfo').textContent = `已从本地存储加载 ${currentData.length} 条记录（备用方案）`;
+                document.getElementById('currentDataInfo').className = 'info-box info-success';
+                
+                // 保存到文件
+                saveDataToCurrentFile(currentData).catch(err => {
+                  console.error('保存数据到文件失败', err);
+                });
+              } else {
+                currentData = [];
+                document.getElementById('currentData').textContent = '[]';
+                document.getElementById('currentDataInfo').textContent = '没有找到数据';
+                document.getElementById('currentDataInfo').className = 'info-box info-warning';
+              }
+            } catch (error) {
+              console.error('从本地存储加载数据失败', error);
+              currentData = [];
+              document.getElementById('currentData').textContent = '[]';
+              document.getElementById('currentDataInfo').textContent = '加载数据失败';
+              document.getElementById('currentDataInfo').className = 'info-box info-warning';
+            }
+          }
+        })
+        .catch(err => {
+          // 尝试从localStorage加载
+          try {
+            const storedData = localStorage.getItem('emotion_map_data');
+            if (storedData) {
+              currentData = JSON.parse(storedData) || [];
+              document.getElementById('currentData').textContent = JSON.stringify(currentData, null, 2);
+              document.getElementById('currentDataInfo').textContent = `已从本地存储加载 ${currentData.length} 条记录（备用方案）`;
+              document.getElementById('currentDataInfo').className = 'info-box info-success';
+            } else {
+              document.getElementById('currentDataInfo').textContent = `错误: ${err}`;
+              document.getElementById('currentDataInfo').className = 'info-box info-warning';
+              document.getElementById('currentData').textContent = '';
+              currentData = [];
+            }
+          } catch (error) {
+            document.getElementById('currentDataInfo').textContent = `错误: ${err}`;
+            document.getElementById('currentDataInfo').className = 'info-box info-warning';
+            document.getElementById('currentData').textContent = '';
+            currentData = [];
+          }
+        });
+    });
+    
+    // 清空数据
+    document.getElementById('clearData').addEventListener('click', () => {
+      if (confirm('确定要清空所有数据吗？此操作不可恢复！')) {
+        // 保存空数组到当前文件
+        saveDataToCurrentFile([])
+          .then(() => {
+            currentData = [];
+            document.getElementById('currentData').textContent = '[]';
+            document.getElementById('currentDataInfo').textContent = '数据已清空';
+            document.getElementById('currentDataInfo').className = 'info-box info-warning';
+          })
+          .catch(err => {
+            document.getElementById('currentDataInfo').textContent = `清空失败: ${err}`;
+            document.getElementById('currentDataInfo').className = 'info-box info-warning';
+          });
+      }
+    });
+    
+    // 显示选择的文件名
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+      const fileName = e.target.files[0] ? e.target.files[0].name : '未选择文件';
+      document.getElementById('fileName').textContent = fileName;
+    });
+    
+    // 导入数据
+    document.getElementById('importData').addEventListener('click', () => {
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+      
+      if (!file) {
+        document.getElementById('importInfo').textContent = '请先选择文件';
+        document.getElementById('importInfo').className = 'info-box info-warning';
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          
+          if (!Array.isArray(data)) {
+            throw new Error('导入的数据格式不正确，应为JSON数组');
+          }
+          
+          // 确保每条记录都有timestamp
+          data.forEach((item, index) => {
+            if (!item.timestamp) {
+              item.timestamp = new Date().getTime() + index;
+            }
+          });
+          
+          // 同时保存到当前文件和历史记录
+          Promise.all([
+            saveDataToCurrentFile(data),
+            saveDataToHistory(data)
+          ])
+            .then(() => {
+              currentData = data;
+              document.getElementById('currentData').textContent = JSON.stringify(data, null, 2);
+              document.getElementById('importInfo').textContent = `成功导入 ${data.length} 条记录`;
+              document.getElementById('importInfo').className = 'info-box info-success';
+              document.getElementById('currentDataInfo').textContent = `当前有 ${data.length} 条记录`;
+              document.getElementById('currentDataInfo').className = 'info-box info-success';
+            })
+            .catch(err => {
+              document.getElementById('importInfo').textContent = `导入失败: ${err}`;
+              document.getElementById('importInfo').className = 'info-box info-warning';
+            });
+        } catch (err) {
+          document.getElementById('importInfo').textContent = `导入失败: ${err.message}`;
+          document.getElementById('importInfo').className = 'info-box info-warning';
+        }
+      };
+      reader.readAsText(file);
+    });
+    
+    // 导出数据
+    document.getElementById('exportData').addEventListener('click', () => {
+      if (currentData.length === 0) {
+        document.getElementById('exportInfo').textContent = '没有数据可导出，请先加载数据';
+        document.getElementById('exportInfo').className = 'info-box info-warning';
+        return;
+      }
+      
+      try {
+        exportDataToBackup(currentData)
+          .then(() => {
+            document.getElementById('exportInfo').textContent = `已导出 ${currentData.length} 条记录到备份目录`;
+            document.getElementById('exportInfo').className = 'info-box info-success';
+          })
+          .catch(err => {
+            document.getElementById('exportInfo').textContent = `导出失败: ${err.message}`;
+            document.getElementById('exportInfo').className = 'info-box info-warning';
+          });
+      } catch (err) {
+        document.getElementById('exportInfo').textContent = `导出失败: ${err.message}`;
+        document.getElementById('exportInfo').className = 'info-box info-warning';
+      }
+    });
+    
+    // 页面加载时自动尝试加载当前数据
+    window.addEventListener('load', () => {
+      document.getElementById('loadCurrentData').click();
+    });
+  </script>
+</body>
+</html> 

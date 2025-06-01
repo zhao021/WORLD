@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>何处所想 - 情绪地图</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet" />
+  <link href="./css/style.css" rel="stylesheet" />
+  <meta name="description" content="何处所想 - 在地图上记录你的情绪和想法，所有数据保存在本地" />
+</head>
+<body>
+  <div id="map"></div>
+  <div id="mapTip" class="map-tip">点击地图任意位置添加新标记</div>
+
+  <div id="infoPanel" class="info-panel hidden">
+    <div class="row">
+      <label for="title">题目</label>
+      <input id="title" type="text" placeholder="请输入标题" />
+    </div>
+    <div class="row">
+      <label for="content">内容</label>
+      <textarea id="content" placeholder="请输入内容"></textarea>
+    </div>
+    <div class="row">
+      <label for="date">日期</label>
+      <input id="date" type="date" />
+    </div>
+    <div class="row">
+      <label for="city">城市</label>
+      <input id="city" type="text" placeholder="请输入城市" />
+    </div>
+    <div class="btn-row">
+      <button id="btnAdd">添加</button>
+      <button id="btnCancel">取消</button>
+    </div>
+    <div id="feedback" class="feedback"></div>
+  </div>
+
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+  <script src="./js/map.js"></script>
+</body>
+</html>
