@@ -229,6 +229,83 @@
         font-size: 0.9rem;
       }
     }
+    
+    /* 数据管理样式 */
+    .data-management-panel {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #eee;
+    }
+    
+    .data-management-panel.hidden {
+      display: none;
+    }
+    
+    .data-management-panel h3 {
+      margin-bottom: 1rem;
+      color: var(--dark-color);
+    }
+    
+    .data-list-container {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+      border-radius: var(--border-radius);
+      margin-bottom: 1rem;
+      background-color: #f8f9fa;
+    }
+    
+    .data-list {
+      padding: 0.5rem;
+    }
+    
+    .data-item {
+      padding: 0.8rem;
+      margin-bottom: 0.8rem;
+      background-color: white;
+      border-radius: var(--border-radius);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      display: flex;
+      align-items: center;
+      transition: var(--transition);
+    }
+    
+    .data-item:hover {
+      background-color: #f0f4f8;
+    }
+    
+    .data-item-checkbox {
+      margin-right: 1rem;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    
+    .data-item-content {
+      flex-grow: 1;
+    }
+    
+    .data-item-title {
+      font-weight: 500;
+      margin-bottom: 0.3rem;
+    }
+    
+    .data-item-info {
+      font-size: 0.85rem;
+      color: #666;
+    }
+    
+    .data-item-preview {
+      max-height: 3.6rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      font-size: 0.9rem;
+      color: #555;
+      margin-top: 0.3rem;
+    }
   </style>
 </head>
 <body>
@@ -246,11 +323,24 @@
         
         <div class="action-row">
           <button id="loadCurrentData" class="btn btn-primary">刷新数据</button>
+          <button id="manageData" class="btn btn-success">管理数据</button>
           <button id="clearData" class="btn btn-danger">清空数据</button>
         </div>
         
         <div id="currentDataInfo" class="info-box info-neutral">未加载数据</div>
         <div id="currentData" class="data-preview"></div>
+        
+        <div id="dataManagementPanel" class="data-management-panel hidden">
+          <h3>数据管理</h3>
+          <p class="card-description">选择要删除的数据项，然后点击"删除选中项"按钮。</p>
+          <div class="data-list-container">
+            <div id="dataList" class="data-list"></div>
+          </div>
+          <div class="action-row">
+            <button id="deleteSelected" class="btn btn-danger">删除选中项</button>
+            <button id="cancelManage" class="btn">返回</button>
+          </div>
+        </div>
       </div>
     </div>
     
@@ -671,6 +761,118 @@
     window.addEventListener('load', () => {
       document.getElementById('loadCurrentData').click();
     });
+    
+    // 管理数据功能
+    document.getElementById('manageData').addEventListener('click', () => {
+      if (currentData.length === 0) {
+        document.getElementById('currentDataInfo').textContent = '没有数据可管理';
+        document.getElementById('currentDataInfo').className = 'info-box info-warning';
+        return;
+      }
+      
+      // 显示管理面板
+      document.getElementById('currentData').style.display = 'none';
+      document.getElementById('dataManagementPanel').classList.remove('hidden');
+      
+      // 渲染数据列表
+      renderDataList();
+    });
+    
+    // 取消管理
+    document.getElementById('cancelManage').addEventListener('click', () => {
+      // 隐藏管理面板
+      document.getElementById('currentData').style.display = '';
+      document.getElementById('dataManagementPanel').classList.add('hidden');
+    });
+    
+    // 删除选中项
+    document.getElementById('deleteSelected').addEventListener('click', () => {
+      const checkboxes = document.querySelectorAll('.data-item-checkbox:checked');
+      
+      if (checkboxes.length === 0) {
+        alert('请先选择要删除的数据项');
+        return;
+      }
+      
+      if (confirm(`确定要删除选中的 ${checkboxes.length} 项数据吗？此操作不可恢复！`)) {
+        // 收集选中项的索引
+        const selectedIndices = Array.from(checkboxes).map(checkbox => 
+          parseInt(checkbox.getAttribute('data-index'))
+        );
+        
+        // 按索引从大到小排序，这样删除时不会影响其他索引
+        selectedIndices.sort((a, b) => b - a);
+        
+        // 删除选中项
+        selectedIndices.forEach(index => {
+          currentData.splice(index, 1);
+        });
+        
+        // 保存更新后的数据
+        Promise.all([
+          saveDataToCurrentFile(currentData),
+          saveDataToHistory(currentData)
+        ])
+          .then(() => {
+            // 更新显示
+            document.getElementById('currentData').textContent = JSON.stringify(currentData, null, 2);
+            document.getElementById('currentDataInfo').textContent = `当前有 ${currentData.length} 条记录`;
+            
+            // 重新渲染数据列表
+            renderDataList();
+            
+            alert('删除成功！');
+          })
+          .catch(err => {
+            alert(`删除失败: ${err}`);
+          });
+      }
+    });
+    
+    // 渲染数据列表
+    function renderDataList() {
+      const dataList = document.getElementById('dataList');
+      dataList.innerHTML = '';
+      
+      if (currentData.length === 0) {
+        dataList.innerHTML = '<div class="info-box info-neutral">没有数据</div>';
+        return;
+      }
+      
+      currentData.forEach((item, index) => {
+        const dataItem = document.createElement('div');
+        dataItem.className = 'data-item';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'data-item-checkbox';
+        checkbox.setAttribute('data-index', index);
+        
+        const content = document.createElement('div');
+        content.className = 'data-item-content';
+        
+        const title = document.createElement('div');
+        title.className = 'data-item-title';
+        title.textContent = item.title || '无标题';
+        
+        const info = document.createElement('div');
+        info.className = 'data-item-info';
+        info.textContent = `日期: ${item.date || '未知'} | 城市: ${item.city || '未知'}`;
+        
+        const preview = document.createElement('div');
+        preview.className = 'data-item-preview';
+        preview.textContent = item.content || '无内容';
+        
+        content.appendChild(title);
+        content.appendChild(info);
+        content.appendChild(preview);
+        
+        dataItem.appendChild(checkbox);
+        dataItem.appendChild(content);
+        
+        dataList.appendChild(dataItem);
+      });
+    }
   </script>
 </body>
 </html> 

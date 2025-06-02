@@ -258,6 +258,9 @@ map.on('load', () => {
   // 添加文件管理按钮
   addFileManagerButton();
   
+  // 添加定位功能
+  setupLocationButton();
+  
   // 加载标记数据
   loadMarkers();
   
@@ -270,6 +273,75 @@ map.on('load', () => {
     mapTip.classList.add('fade');
   }, 5000);
 });
+
+// 设置定位按钮功能
+function setupLocationButton() {
+  const locationBtn = document.getElementById('locationBtn');
+  
+  locationBtn.addEventListener('click', () => {
+    // 添加定位中的动画效果
+    locationBtn.classList.add('locating');
+    
+    // 尝试获取用户位置
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        // 成功回调
+        (position) => {
+          const { longitude, latitude } = position.coords;
+          
+          // 飞行到用户位置
+          map.flyTo({
+            center: [longitude, latitude],
+            zoom: 12,
+            speed: 1.2,
+            curve: 1,
+            easing: (t) => t
+          });
+          
+          // 创建一个临时标记显示用户位置
+          const userLocationMarker = document.createElement('div');
+          userLocationMarker.className = 'vinyl';
+          userLocationMarker.style.boxShadow = '0 0 10px 3px #4285f4aa';
+          
+          const center = document.createElement('div');
+          center.className = 'center-ring';
+          userLocationMarker.appendChild(center);
+          
+          // 添加临时标记
+          const marker = new mapboxgl.Marker({
+            element: userLocationMarker,
+            anchor: 'center'
+          })
+          .setLngLat([longitude, latitude])
+          .addTo(map);
+          
+          // 3秒后移除标记
+          setTimeout(() => {
+            marker.remove();
+          }, 3000);
+          
+          // 移除定位中的动画效果
+          locationBtn.classList.remove('locating');
+        },
+        // 错误回调
+        (error) => {
+          console.error('获取位置失败:', error);
+          alert('无法获取您的位置，请确保已授予位置权限。');
+          locationBtn.classList.remove('locating');
+        },
+        // 选项
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    } else {
+      alert('您的浏览器不支持地理定位功能');
+      locationBtn.classList.remove('locating');
+    }
+  });
+}
 
 // 添加文件管理按钮
 function addFileManagerButton() {
